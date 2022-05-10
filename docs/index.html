@@ -613,7 +613,7 @@ in your history and profile files.  We will discuss this later today.
 <p>
 Look at <code>LOGS/history.data</code> and <code>LOGS/profile1.data</code> to see what
 header and column information is included by default.  In our later
-exercises, we will be setting the variable <code>extra_heat</code>, which is an
+exercises, we will be setting the variable <code>eps_heat</code>, which is an
 additional specific heating rate defined at each cell in the star.
 Add this quantity to the output.  Run MESA and confirm that the column
 you want is there.  Its value should be zero.
@@ -1022,14 +1022,14 @@ subroutines in that file (that is, contained within the
   ierr = 0
   <span style="color: #00ffff;">call</span> <span style="color: #87cefa;">star_ptr</span>(id, s, ierr)
   <span style="color: #00ffff;">if</span> (ierr /= 0) <span style="color: #00ffff;">return</span>
-  s% extra_heat(:) = s% extra_power_source
+  s% eps_heat(:) = s% extra_power_source
   <span style="color: #00ffff;">return</span>
 <span style="color: #00ffff;">end subroutine</span> <span style="color: #87cefa;">default_other_energy</span>
 </pre>
 </div>
 
 <p>
-The variable <code>s% extra_heat</code> is an additional specific (per mass)
+The variable <code>s% eps_heat</code> is an additional specific (per mass)
 heating rate that will be included.  Note that this routine already
 does something; <code>default_other_energy</code> is responsible for making the
 <a href="http://mesa.sourceforge.net/controls_defaults.html#extra_power_source"><code>extra_power_source</code></a> control work.  Go ahead and remove that bit, the
@@ -1038,8 +1038,8 @@ existing example, and rename it to <code>lecture1_other_energy</code>.
 
 <p>
 In Fortran, you can write expressions that operate on the whole array
-at once (like <code>s% extra_heat(:) = s% extra_power_source</code>).  However,
-it is often simplest to explicitly set the value of <code>extra_heat</code> (or
+at once (like <code>s% eps_heat(:) = s% extra_power_source</code>).  However,
+it is often simplest to explicitly set the value of <code>eps_heat</code> (or
 some other array) one value at a time, by using a loop.  While we're
 looking code with a loop, it is a good time to mention that in MESA,
 the outermost zone is at k=1 and the innermost zone is at k=s% nz.
@@ -1057,9 +1057,9 @@ through nz are meaningful.
   <span style="color: #00ffff;">call</span> <span style="color: #87cefa;">star_ptr</span>(id, s, ierr)
   <span style="color: #00ffff;">if</span> (ierr /= 0) <span style="color: #00ffff;">return</span>
 
-  <span style="color: #ff7f24;">! </span><span style="color: #ff7f24;">calculate extra_heat for each cell</span>
+  <span style="color: #ff7f24;">! </span><span style="color: #ff7f24;">calculate eps_heat for each cell</span>
   <span style="color: #00ffff;">do</span> k = 1, s% nz
-     s% extra_heat(k) = 0
+     s% eps_heat(k) = 0
   <span style="color: #00ffff;">end do</span>
 
 <span style="color: #00ffff;">end subroutine</span> <span style="color: #87cefa;">lecture1_other_energy</span>
@@ -1082,7 +1082,7 @@ Use the <code>other_energy</code> routine to add a heating term
 </p>
 
 \begin{equation*}
-\texttt{extra_heat} = L_{\mathrm{extra}} \frac{1}{\Delta M} \exp\left(-\frac{M_r}{\Delta M}\right)
+\epsilon_{\texttt{heat}} = L_{\mathrm{extra}} \frac{1}{\Delta M} \exp\left(-\frac{M_r}{\Delta M}\right)
 \end{equation*}
 
 <p>
@@ -1092,7 +1092,7 @@ M_\odot\) and \(L_{\mathrm{extra}} = 0.1 L_\odot\).
 
 <p>
 The lower left panel in the PGSTAR plots displays the value of <code>s%
-extra_heat</code>, so you should be able to easily check if it looks OK.
+eps_heat</code>, so you should be able to easily check if it looks OK.
 </p>
 
 <p>
