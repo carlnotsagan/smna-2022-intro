@@ -736,7 +736,7 @@ in your history and profile files.  We will discuss this later today.
 <p>
 Look at <code>LOGS/history.data</code> and <code>LOGS/profile1.data</code> to see what
 header and column information is included by default.  In our later
-exercises, we will be setting the variable <code>eps_heat</code>, which is an
+exercises, we will be setting the variable <code>extra_heat</code>, which is an
 additional specific heating rate defined at each cell in the star.
 Add this quantity to the output.  Run MESA and confirm that the column
 you want is there.  Its value should be zero.
@@ -755,7 +755,7 @@ amount of extra heat being added to the star in your output.
 Uncomment the following lines in <code>profile_columns.list</code>
 </p>
 <pre class="example" id="org59702d3">
-eps_heat
+extra_heat
 </pre>
 <p>
 and then run MESA
@@ -1166,14 +1166,14 @@ subroutines in that file (that is, contained within the
   ierr = 0
   <span style="color: #00ffff;">call</span> <span style="color: #87cefa;">star_ptr</span>(id, s, ierr)
   <span style="color: #00ffff;">if</span> (ierr /= 0) <span style="color: #00ffff;">return</span>
-  s% eps_heat(:) = s% extra_power_source
+  s% extra_heat(:) = s% extra_power_source
   <span style="color: #00ffff;">return</span>
 <span style="color: #00ffff;">end subroutine</span> <span style="color: #87cefa;">default_other_energy</span>
 </pre>
 </div>
 
 <p>
-The variable <code>s% eps_heat</code> is an additional specific (per mass)
+The variable <code>s% extra_heat</code> is an additional specific (per mass)
 heating rate that will be included.  Note that this routine already
 does something; <code>default_other_energy</code> is responsible for making the
 <a href="http://mesa.sourceforge.net/controls_defaults.html#extra_power_source"><code>extra_power_source</code></a> control work.  Go ahead and remove that bit, the
@@ -1182,8 +1182,8 @@ existing example, and rename it to <code>lecture1_other_energy</code>.
 
 <p>
 In Fortran, you can write expressions that operate on the whole array
-at once (like <code>s% eps_heat(:) = s% extra_power_source</code>).  However,
-it is often simplest to explicitly set the value of <code>eps_heat</code> (or
+at once (like <code>s% extra_heat(:) = s% extra_power_source</code>).  However,
+it is often simplest to explicitly set the value of <code>extra_heat</code> (or
 some other array) one value at a time, by using a loop.  While we're
 looking code with a loop, it is a good time to mention that in MESA,
 the outermost zone is at k=1 and the innermost zone is at k=s% nz.
@@ -1201,9 +1201,9 @@ through nz are meaningful.
   <span style="color: #00ffff;">call</span> <span style="color: #87cefa;">star_ptr</span>(id, s, ierr)
   <span style="color: #00ffff;">if</span> (ierr /= 0) <span style="color: #00ffff;">return</span>
 
-  <span style="color: #ff7f24;">! </span><span style="color: #ff7f24;">calculate eps_heat for each cell</span>
+  <span style="color: #ff7f24;">! </span><span style="color: #ff7f24;">calculate extra_heat for each cell</span>
   <span style="color: #00ffff;">do</span> k = 1, s% nz
-     s% eps_heat(k) = 0
+     s% extra_heat(k) = 0
   <span style="color: #00ffff;">end do</span>
 
 <span style="color: #00ffff;">end subroutine</span> <span style="color: #87cefa;">lecture1_other_energy</span>
@@ -1226,7 +1226,7 @@ Use the <code>other_energy</code> routine to add a heating term
 </p>
 
 \begin{equation*}
-\epsilon_{\texttt{heat}} = L_{\mathrm{extra}} \frac{1}{\Delta M} \exp\left(-\frac{M_r}{\Delta M}\right)
+\texttt{extra_heat} = L_{\mathrm{extra}} \frac{1}{\Delta M} \exp\left(-\frac{M_r}{\Delta M}\right)
 \end{equation*}
 
 <p>
@@ -1236,7 +1236,7 @@ M_\odot\) and \(L_{\mathrm{extra}} = 0.1 L_\odot\).
 
 <p>
 The lower left panel in the PGSTAR plots displays the value of <code>s%
-eps_heat</code>, so you should be able to easily check if it looks OK.
+extra_heat</code>, so you should be able to easily check if it looks OK.
 </p>
 
 <p>
@@ -1281,7 +1281,7 @@ point <code>s% other_energy</code> at the routine you want to be executed.
 <p>
 Failure to do perform <b>both</b> of these is the most common problem
 people encounter when using the other_* hooks.
-With <code>mesa-r21.12.1</code>, users must include <code>use auto diff</code> in their subroutines.
+With <code>mesa-r21.12.1</code>, users must include <code>use auto_diff</code> in their subroutines. Additionally, when performing math with real arrays must access the array as <code>s% extra_heat(1:s%nz)%val</code>.
 </p>
 
 <div class="org-src-container">
@@ -1304,12 +1304,12 @@ With <code>mesa-r21.12.1</code>, users must include <code>use auto diff</code> i
      <span style="color: #ff7f24;">! </span><span style="color: #ff7f24;">so the mass coordinate at the middle of the cell is </span>
      Mr = s% m(k) - 0.5 * s% dm(k)
 
-     s% eps_heat(k) = L_extra * <span style="color: #00ffff;">exp</span>(-Mr/delta_M) / delta_M
+     s% extra_heat(k) = L_extra * <span style="color: #00ffff;">exp</span>(-Mr/delta_M) / delta_M
   <span style="color: #00ffff;">end do</span>
 
   <span style="color: #ff7f24;">! </span><span style="color: #ff7f24;">output rate at which energy is added</span>
   <span style="color: #00ffff;">write</span>(*,<span style="color: #ffa07a;">'(A, 2ES12.4)'</span>) <span style="color: #ffa07a;">"L_extra (actual, target): "</span>, <span style="color: #00ffff;">&amp;</span>
-       <span style="color: #00ffff;">dot_product</span>(s% eps_heat(1:s%nz), s% dm(1:s%nz))/Lsun, s% x_ctrl(2)
+       <span style="color: #00ffff;">dot_product</span>(s% extra_heat(1:s%nz)%val, s% dm(1:s%nz))/Lsun, s% x_ctrl(2)
 
 <span style="color: #00ffff;">end subroutine</span> <span style="color: #87cefa;">lecture1_other_energy</span>
 </pre>
@@ -1364,7 +1364,7 @@ the function
 The subroutine <code>data_for_extra_profile_columns</code> already has access to
 the star_info pointer, so you can make use of any of the quantities
 defined in <code>$MESA_DIR/star_data/public/star_data.inc</code>.  This includes <code>s%
-eps_nuc</code> and the <code>s% eps_heat</code> you defined earlier.
+eps_nuc</code> and the <code>s% extra_heat</code> you defined earlier.
 </p>
 
 <p>
@@ -1388,7 +1388,7 @@ The desired ratio can then be calculated in each zone.
 
    names(1) = <span style="color: #ffa07a;">'eps_ratio'</span>
    <span style="color: #00ffff;">do</span> k = 1, nz
-     vals(k,1) = s% eps_heat(k)/s% eps_nuc(k)
+     vals(k,1) = s% extra_heat(k)%val/s% eps_nuc(k)
    <span style="color: #00ffff;">end do</span>
 
 <span style="color: #00ffff;">end subroutine</span> <span style="color: #87cefa;">data_for_extra_profile_columns</span>
